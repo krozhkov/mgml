@@ -1,6 +1,22 @@
-MIT License
+# Third-Party Notices and Credits
 
-Copyright (c) 2026 Konstantin Rozhkov
+This repository contains `mgml`, a Golang port of the MJML framework. 
+
+Below is the information regarding the original project, its corresponding Go package in this repository, and its license.
+
+---
+
+## MJML
+* **Go Package:** `https://github.com/krozhkov/mgml`
+* **Original Project:** https://github.com/mjmlio/mjml
+* **Original Copyright:** Copyright (c) 2016 Mailjet SAS
+* **License:** MIT License
+
+<details>
+<summary>View License Text</summary>
+The MIT License (MIT)
+
+Copyright (c) 2016 Mailjet SAS, https://mjml.io
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +35,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+</details>
