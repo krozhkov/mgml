@@ -19,7 +19,7 @@ To evaluate the performance of mgml against other implementations, a benchmark w
 
 ### Tested Versions:
 
-* **MJML (JS):** 4.16.1
+* **MJML (JS):** 4.16.1 (with `--config.beautify=false`)
 * **mrml-cli:** 1.7.1
 * **gomjml:** v0.11.0
 * **mgml:** v0.1.0
@@ -34,6 +34,12 @@ To evaluate the performance of mgml against other implementations, a benchmark w
 | mgml        |                 464 |           4 |           2 |           0 |
 | mjml (JS)   |               14791 |         147 |          84 |         8.5 |
 ```
+
+## Omitted Features
+
+To maintain full transparency, please note that the following features from the original MJML library have not been included in this port:
+
+* **Minification and Beautification:** The `minify` and `beautify` processing steps are not implemented. These operations are not considered core functionalities of the MJML rendering framework itself. If you require minified or beautifully formatted HTML output, it is highly recommended to pass the generated HTML through dedicated external tools or libraries better suited for those specific tasks.
 
 ## Similar Projects and Alternatives
 
