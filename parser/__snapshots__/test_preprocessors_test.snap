@@ -1,0 +1,93 @@
+
+[TestPreprocessors - 1]
+&parser.MJMLNode{
+    File:             ".",
+    Line:             1,
+    AbsoluteFilePath: "",
+    TagName:          "mjml",
+    IncludedIn:       nil,
+    Attributes:       (*orderedmap.OrderedMap[string,string])(nil),
+    Content:          "",
+    Parent:           (*parser.MJMLNode)(nil),
+    Children:         {
+        &parser.MJMLNode{
+            File:             ".",
+            Line:             2,
+            AbsoluteFilePath: "",
+            TagName:          "mj-body",
+            IncludedIn:       nil,
+            Attributes:       (*orderedmap.OrderedMap[string,string])(nil),
+            Content:          "",
+            Parent:           (*parser.MJMLNode)(nil),
+            Children:         {
+                &parser.MJMLNode{
+                    File:             ".",
+                    Line:             3,
+                    AbsoluteFilePath: "",
+                    TagName:          "mj-section",
+                    IncludedIn:       nil,
+                    Attributes:       &orderedmap.OrderedMap[string,string]{
+                        kv: {
+                            "mj-class": &orderedmap.Element[string,string]{
+                                next:  (*orderedmap.Element[string,string])(nil),
+                                prev:  (*orderedmap.Element[string,string])(nil),
+                                Key:   "mj-class",
+                                Value: "content",
+                            },
+                        },
+                        ll: orderedmap.list[string,string]{
+                            root: orderedmap.Element[string,string]{
+                                next: &orderedmap.Element[string,string]{
+                                    next:  (*orderedmap.Element[string,string])(nil),
+                                    prev:  (*orderedmap.Element[string,string])(nil),
+                                    Key:   "mj-class",
+                                    Value: "content",
+                                },
+                                prev: &orderedmap.Element[string,string]{
+                                    next:  (*orderedmap.Element[string,string])(nil),
+                                    prev:  (*orderedmap.Element[string,string])(nil),
+                                    Key:   "mj-class",
+                                    Value: "content",
+                                },
+                                Key:   "",
+                                Value: "",
+                            },
+                        },
+                    },
+                    Content:  "",
+                    Parent:   (*parser.MJMLNode)(nil),
+                    Children: {
+                        &parser.MJMLNode{
+                            File:             ".",
+                            Line:             4,
+                            AbsoluteFilePath: "",
+                            TagName:          "mj-text",
+                            IncludedIn:       nil,
+                            Attributes:       (*orderedmap.OrderedMap[string,string])(nil),
+                            Content:          "Title 1",
+                            Parent:           (*parser.MJMLNode)(nil),
+                            Children:         nil,
+                            Err:              nil,
+                        },
+                        &parser.MJMLNode{
+                            File:             ".",
+                            Line:             5,
+                            AbsoluteFilePath: "",
+                            TagName:          "mj-text",
+                            IncludedIn:       nil,
+                            Attributes:       (*orderedmap.OrderedMap[string,string])(nil),
+                            Content:          "Title 2",
+                            Parent:           (*parser.MJMLNode)(nil),
+                            Children:         nil,
+                            Err:              nil,
+                        },
+                    },
+                    Err: nil,
+                },
+            },
+            Err: nil,
+        },
+    },
+    Err: nil,
+}
+---
