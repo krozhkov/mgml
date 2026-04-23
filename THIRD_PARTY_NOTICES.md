@@ -36,3 +36,42 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 </details>
+
+## MJML Email Templates (Test Data)
+* **Usage:** Linked as a Git submodule to the `tests/mjmlio-templates` directory solely for automated testing purposes.
+* **Original Project:** https://github.com/mjmlio/email-templates
+* **Copyright:** Copyright (c) Mailjet SAS
+* **License:** No explicit license provided (All Rights Reserved). Used under the assumption of fair use for testing compatibility.
+
+## MRML Test Templates
+* **Usage:** Copied to the `tests/mrml-templates` directory for testing purposes.
+* **Original Project:** https://github.com/jdrouet/mrml (https://github.com/jdrouet/mrml/tree/main/packages/mrml-core/resources/compare/success)
+* **Original Copyright:** Copyright (c) MRML Contributors
+* **License:** MIT License
+
+<details>
+<summary>View License Text</summary>
+Permission is hereby granted, free of charge, to any
+person obtaining a copy of this software and associated
+documentation files (the "Software"), to deal in the
+Software without restriction, including without
+limitation the rights to use, copy, modify, merge,
+publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice
+shall be included in all copies or substantial portions
+of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+</details>
