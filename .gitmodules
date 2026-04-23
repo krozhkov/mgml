@@ -1,0 +1,3 @@
+[submodule "tests/mjmlio-templates"]
+	path = tests/mjmlio-templates
+	url = https://github.com/mjmlio/email-templates.git
