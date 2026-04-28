@@ -31,7 +31,7 @@ var MjCarouselSpec = &core.ComponentSpec{
 		"padding-left":               "unit(px,%)",
 		"padding-right":              "unit(px,%)",
 		"right-icon":                 "string",
-		"thumbnails":                 "enum(visible,hidden)",
+		"thumbnails":                 "enum(visible,hidden,supported)",
 		"tb-border":                  "string",
 		"tb-border-radius":           "unit(px,%)",
 		"tb-hover-border-color":      "color",
@@ -172,6 +172,18 @@ func (c *MjCarousel) ComponentHeadStyle(breakpoint string) string {
     }
 	`, c.GetAttributeOr("tb-selected-border-color", "")))
 
+	for i := 0; i < length; i++ {
+		if i > 0 {
+			sb.WriteString(",")
+		}
+		sb.WriteString(".mj-carousel-" + carouselId + "-radio-" + strconv.Itoa(i+1) + ":checked " + strings.Repeat("+ * ", length-i-1) + "+ .mj-carousel-content .mj-carousel-" + carouselId + "-thumbnail")
+	}
+
+	sb.WriteString(` {
+      display: inline-block !important;
+    }
+	`)
+
 	sb.WriteString(`
 	.mj-carousel-image img + div,
     .mj-carousel-thumbnail img + div {
@@ -297,6 +309,11 @@ func (c *MjCarousel) getChildrenAttr() []*core.Attribute {
 	attr = append(attr, &core.Attribute{Key: "carouselId", Value: c.carouselId})
 	attr = append(attr, &core.Attribute{Key: "tb-width", Value: c.thumbnailsWidth()})
 
+	thumbnails := c.GetAttribute("thumbnails")
+	if thumbnails != nil {
+		attr = append(attr, &core.Attribute{Key: "thumbnails", Value: *thumbnails})
+	}
+
 	return attr
 }
 
@@ -331,7 +348,8 @@ func (c *MjCarousel) generateRadios(w core.MJMLWriter) error {
 }
 
 func (c *MjCarousel) generateThumbnails(w core.MJMLWriter) error {
-	if c.GetAttributeOr("thumbnails", "") != "visible" {
+	thumbnails := c.GetAttributeOr("thumbnails", "")
+	if thumbnails != "visible" && thumbnails != "supported" {
 		return nil
 	}
 

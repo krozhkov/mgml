@@ -100,5 +100,6 @@ for file in "${MJML_FILES[@]}"; do
         rm -f "$mjml_html" "$mgml_html" "$mjml_min" "$mgml_min"
     else
         echo -e "${RED}[ERROR]${NC} Differences were found in '$filename'"
+        rm -f "$mjml_html" "$mgml_html" "$mjml_min" "$mgml_min"
     fi
 done

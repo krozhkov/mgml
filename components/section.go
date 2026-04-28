@@ -68,7 +68,10 @@ func NewMjSection(node *parser.MJMLNode, spec *core.ComponentSpec, props *core.C
 
 	section.BodyComponent.Component = section
 
-	children, err := section.CreateChildren(nil, &core.CreateChildrenOptions{})
+	childrenAttr := section.getChildrenAttr()
+	children, err := section.CreateChildren(nil, &core.CreateChildrenOptions{
+		Attributes: childrenAttr,
+	})
 	if err != nil {
 		return section, err
 	}
@@ -150,6 +153,9 @@ func (s *MjSection) GetStyles(element string) []*core.Style {
 		if hasBorderRadius {
 			attrs = append(attrs, &core.Style{Name: "overflow", Value: "hidden"})
 		}
+		if s.Props.Index != 0 {
+			attrs = append(attrs, &core.Style{Name: "margin-top", Value: s.GetAttributeOr("gap", "")})
+		}
 		return attrs
 	case "innerDiv":
 		return []*core.Style{
@@ -157,8 +163,14 @@ func (s *MjSection) GetStyles(element string) []*core.Style {
 			{Name: "font-size", Value: "0"},
 		}
 	case "beforeSection":
+		var paddingTop string
+		if s.Props.Index != 0 { // !isFirstSection
+			paddingTop = s.GetAttributeOr("gap", "")
+		}
+
 		return []*core.Style{
 			{Name: "width", Value: strconv.Itoa(containerWidth) + "px"},
+			{Name: "padding-top", Value: paddingTop},
 		}
 	case "vRect":
 		if fullWidth {
@@ -182,6 +194,15 @@ func (s *MjSection) GetChildContext() *core.MJMLContext {
 	copy.ContainerWidth = box
 
 	return &copy
+}
+
+func (s *MjSection) getChildrenAttr() []*core.Attribute {
+	gap := s.GetAttribute("gap")
+	if gap != nil {
+		return []*core.Attribute{{Key: "gap", Value: *gap}}
+	}
+
+	return nil
 }
 
 func (s *MjSection) getBackground() string {
@@ -269,8 +290,18 @@ func (s *MjSection) hasBorderRadius() bool {
 	return s.GetAttributeOr("border-radius", "") != ""
 }
 
+func (s *MjSection) hasGap() bool {
+	gap := s.GetAttribute("gap")
+	return gap != nil && *gap != ""
+}
+
 func (s *MjSection) renderBefore(w core.MJMLWriter) error {
 	containerWidth := s.Context.ContainerWidth
+
+	bgColor := s.GetAttribute("background-color")
+	if s.hasGap() {
+		bgColor = nil
+	}
 
 	if _, err := w.WriteString("<!--[if mso | IE]>"); err != nil {
 		return err
@@ -289,7 +320,7 @@ func (s *MjSection) renderBefore(w core.MJMLWriter) error {
 		Add("role", "presentation").
 		Add("style", "beforeSection").
 		Add("width", strconv.Itoa(containerWidth)).
-		AddNullable("bgcolor", s.GetAttribute("background-color")).
+		AddNullable("bgcolor", bgColor).
 		Write(w); err != nil {
 		return err
 	}

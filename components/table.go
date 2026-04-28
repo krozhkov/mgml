@@ -69,6 +69,11 @@ func (t *MjTable) GetTagName() string {
 func (t *MjTable) GetStyles(element string) []*core.Style {
 	switch element {
 	case "table":
+		var borderCollapse string
+		if t.hasCellspacing() {
+			borderCollapse = "separate"
+		}
+
 		return []*core.Style{
 			{Name: "color", Value: t.GetAttributeOr("color", "")},
 			{Name: "font-family", Value: t.GetAttributeOr("font-family", "")},
@@ -77,6 +82,7 @@ func (t *MjTable) GetStyles(element string) []*core.Style {
 			{Name: "table-layout", Value: t.GetAttributeOr("table-layout", "")},
 			{Name: "width", Value: t.GetAttributeOr("width", "")},
 			{Name: "border", Value: t.GetAttributeOr("border", "")},
+			{Name: "border-collapse", Value: borderCollapse},
 		}
 	default:
 		return nil
@@ -90,6 +96,10 @@ func (t *MjTable) GetChildContext() *core.MJMLContext {
 func (t *MjTable) getWidth() string {
 	width := t.GetAttributeOr("width", "")
 
+	if width == "auto" {
+		return width
+	}
+
 	parsedWidth, unit := helpers.WidthParser(width, true)
 
 	switch unit {
@@ -98,6 +108,12 @@ func (t *MjTable) getWidth() string {
 	default:
 		return strconv.FormatFloat(parsedWidth, 'f', -1, 64)
 	}
+}
+
+func (t *MjTable) hasCellspacing() bool {
+	cellspacing := t.GetAttributeOr("cellspacing", "")
+	numericValue, err := helpers.ParseFloatLoose(cellspacing)
+	return err == nil && numericValue > 0
 }
 
 func (t *MjTable) Render(w core.MJMLWriter) error {

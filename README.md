@@ -4,7 +4,7 @@ A high-performance Golang port of the popular responsive email framework [MJML](
 
 The main goal of this project is to act as a drop-in replacement for the original JS library. The project strives for maximum behavioral compatibility with the original, going as far as exactly reproducing some of its architectural quirks and issues ("bug-for-bug compatibility").
 
-**The current codebase is synchronized and corresponds to the original MJML version 4.16.1**
+**The current codebase is synchronized and corresponds to the original MJML version 4.18.0**
 
 ## Key Benefits
 
@@ -19,7 +19,7 @@ To evaluate the performance of mgml against other implementations, a benchmark w
 
 ### Tested Versions:
 
-* **MJML (JS):** 4.16.1 (with `--config.beautify=false`)
+* **MJML (JS):** 4.18.0 (with `--config.beautify=false`)
 * **mrml-cli:** 1.7.1
 * **gomjml:** v0.11.0
 * **mgml:** v0.1.0
@@ -29,10 +29,10 @@ To evaluate the performance of mgml against other implementations, a benchmark w
 ```
 | Tool        | 100x Total (ms)     | Avg (ms)    | Max RAM (MB)| Avg CPU (%) |
 |-------------|---------------------|-------------|-------------|-------------|
-| gomjml      |                 436 |           4 |           1 |           0 |
-| mrml        |                 159 |           1 |           2 |           0 |
-| mgml        |                 464 |           4 |           2 |           0 |
-| mjml (JS)   |               14791 |         147 |          84 |         8.5 |
+| gomjml      |                 427 |           4 |           1 |           0 |
+| mrml        |                 160 |           1 |           2 |           0 |
+| mgml        |                 469 |           4 |           1 |           0 |
+| mjml (JS)   |               14912 |         149 |          83 |         8.2 |
 ```
 
 ## Omitted Features

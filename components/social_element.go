@@ -234,6 +234,7 @@ func (e *MjSocialElement) GetStyles(element string) []*core.Style {
 		return []*core.Style{
 			{Name: "vertical-align", Value: "middle"},
 			{Name: "padding", Value: e.GetAttributeOr("text-padding", "")},
+			{Name: "text-align", Value: e.GetAttributeOr("align", "")},
 		}
 	case "text":
 		return []*core.Style{
@@ -320,11 +321,6 @@ func (e *MjSocialElement) renderIcon(w core.MJMLWriter, socialAttrs map[string]s
 		attr = helpers.TrimNumber(attr)
 		iconSize = &attr
 	}
-	var iconHeight *string
-	if attr, ok := socialAttrs["icon-height"]; ok {
-		attr = helpers.TrimNumber(attr)
-		iconHeight = &attr
-	}
 
 	hasLink := href != nil && *href != ""
 
@@ -388,14 +384,9 @@ func (e *MjSocialElement) renderIcon(w core.MJMLWriter, socialAttrs map[string]s
 		return err
 	}
 
-	height := iconHeight
-	if height == nil {
-		height = iconSize
-	}
 	if err := NewAttributesBuilder(e).
 		AddNullable("alt", e.GetAttribute("alt")).
 		AddNullable("title", e.GetAttribute("title")).
-		AddNullable("height", height).
 		AddNullable("src", src).
 		Add("style", "img").
 		AddNullable("width", iconSize).

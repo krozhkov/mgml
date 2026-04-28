@@ -79,6 +79,11 @@ func (c *MjColumn) GetStyles(element string) []*core.Style {
 			{Name: "width", Value: c.getMobileWidth()},
 		}
 	case "table":
+		var borderCollapse string
+		if c.hasBorderRadius() || c.hasInnerBorderRadius() {
+			borderCollapse = "separate"
+		}
+
 		if c.hasGutter() {
 			return []*core.Style{
 				{Name: "background-color", Value: c.GetAttributeOr("inner-background-color", "")},
@@ -88,6 +93,7 @@ func (c *MjColumn) GetStyles(element string) []*core.Style {
 				{Name: "border-radius", Value: c.GetAttributeOr("inner-border-radius", "")},
 				{Name: "border-right", Value: c.GetAttributeOr("inner-border-right", "")},
 				{Name: "border-top", Value: c.GetAttributeOr("inner-border-top", "")},
+				{Name: "border-collapse", Value: borderCollapse},
 			}
 		}
 
@@ -100,6 +106,7 @@ func (c *MjColumn) GetStyles(element string) []*core.Style {
 			{Name: "border-right", Value: c.GetAttributeOr("border-right", "")},
 			{Name: "border-top", Value: c.GetAttributeOr("border-top", "")},
 			{Name: "vertical-align", Value: c.GetAttributeOr("vertical-align", "")},
+			{Name: "border-collapse", Value: borderCollapse},
 		}
 	case "tdOutlook":
 		return []*core.Style{
@@ -107,6 +114,11 @@ func (c *MjColumn) GetStyles(element string) []*core.Style {
 			{Name: "width", Value: c.GetWidthAsPixel()},
 		}
 	case "gutter":
+		var borderCollapse string
+		if c.hasBorderRadius() {
+			borderCollapse = "separate"
+		}
+
 		return []*core.Style{
 			{Name: "background-color", Value: c.GetAttributeOr("background-color", "")},
 			{Name: "border", Value: c.GetAttributeOr("border", "")},
@@ -116,6 +128,7 @@ func (c *MjColumn) GetStyles(element string) []*core.Style {
 			{Name: "border-right", Value: c.GetAttributeOr("border-right", "")},
 			{Name: "border-top", Value: c.GetAttributeOr("border-top", "")},
 			{Name: "vertical-align", Value: c.GetAttributeOr("vertical-align", "")},
+			{Name: "border-collapse", Value: borderCollapse},
 			{Name: "padding", Value: c.GetAttributeOr("padding", "")},
 			{Name: "padding-top", Value: c.GetAttributeOr("padding-top", "")},
 			{Name: "padding-right", Value: c.GetAttributeOr("padding-right", "")},
@@ -198,6 +211,16 @@ func (c *MjColumn) Render(w core.MJMLWriter) error {
 	}
 
 	return nil
+}
+
+func (c *MjColumn) hasBorderRadius() bool {
+	borderRadius := c.GetAttribute("border-radius")
+	return borderRadius != nil && *borderRadius != ""
+}
+
+func (c *MjColumn) hasInnerBorderRadius() bool {
+	innerBorderRadius := c.GetAttribute("inner-border-radius")
+	return innerBorderRadius != nil && *innerBorderRadius != ""
 }
 
 func (c *MjColumn) hasGutter() bool {
@@ -364,6 +387,8 @@ func (c *MjColumn) renderColumn(w core.MJMLWriter) error {
 }
 
 func (c *MjColumn) renderGutter(w core.MJMLWriter) error {
+	hasBorderRadius := c.hasBorderRadius()
+
 	if _, err := w.WriteString("<table "); err != nil {
 		return err
 	}
@@ -376,6 +401,20 @@ func (c *MjColumn) renderGutter(w core.MJMLWriter) error {
 		Add("width", "100%").
 		Write(w); err != nil {
 		return err
+	}
+
+	if hasBorderRadius {
+		if _, err := w.WriteString(" style=\""); err != nil {
+			return err
+		}
+
+		if err := FormatCssStyles(w, []*core.Style{{Name: "border-collapse", Value: "separate"}}); err != nil {
+			return err
+		}
+
+		if _, err := w.WriteString("\""); err != nil {
+			return err
+		}
 	}
 
 	if _, err := w.WriteString("><tbody><tr><td "); err != nil {

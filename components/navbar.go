@@ -117,11 +117,11 @@ func (n *MjNavbar) GetStyles(element string) []*core.Style {
 			{Name: "text-transform", Value: n.GetAttributeOr("ico-text-transform", "")},
 			{Name: "text-decoration", Value: n.GetAttributeOr("ico-text-decoration", "")},
 			{Name: "line-height", Value: n.GetAttributeOr("ico-line-height", "")},
+			{Name: "padding", Value: n.GetAttributeOr("ico-padding", "")},
 			{Name: "padding-top", Value: n.GetAttributeOr("ico-padding-top", "")},
 			{Name: "padding-right", Value: n.GetAttributeOr("ico-padding-right", "")},
 			{Name: "padding-bottom", Value: n.GetAttributeOr("ico-padding-bottom", "")},
 			{Name: "padding-left", Value: n.GetAttributeOr("ico-padding-left", "")},
-			{Name: "padding", Value: n.GetAttributeOr("ico-padding", "")},
 		}
 	case "trigger":
 		return []*core.Style{

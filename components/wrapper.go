@@ -1,16 +1,18 @@
 package components
 
 import (
+	"maps"
 	"strconv"
 
 	"github.com/krozhkov/mgml/core"
 	"github.com/krozhkov/mgml/core/helpers"
+	"github.com/krozhkov/mgml/internal/utils"
 	"github.com/krozhkov/mgml/parser"
 )
 
 var MjWrapperSpec = &core.ComponentSpec{
 	TagName:           "mj-wrapper",
-	AllowedAttributes: MjSectionSpec.AllowedAttributes,
+	AllowedAttributes: utils.CopyMap(maps.Clone(MjSectionSpec.AllowedAttributes), map[string]string{"gap": "unit(px)"}),
 	DefaultAttributes: MjSectionSpec.DefaultAttributes,
 	Create:            NewMjWrapper,
 }
@@ -23,7 +25,10 @@ func NewMjWrapper(node *parser.MJMLNode, spec *core.ComponentSpec, props *core.C
 
 	wrapper.BodyComponent.Component = wrapper
 
-	children, err := wrapper.CreateChildren(nil, &core.CreateChildrenOptions{})
+	childrenAttr := wrapper.getChildrenAttr()
+	children, err := wrapper.CreateChildren(nil, &core.CreateChildrenOptions{
+		Attributes: childrenAttr,
+	})
 	if err != nil {
 		return wrapper, err
 	}

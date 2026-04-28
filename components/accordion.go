@@ -133,6 +133,11 @@ func (a *MjAccordion) getChildrenAttr() []*core.Attribute {
 		}
 	}
 
+	accordionFontFamily := a.GetAttribute("font-family")
+	if accordionFontFamily != nil {
+		attr = append(attr, &core.Attribute{Key: "accordionFontFamily", Value: *accordionFontFamily})
+	}
+
 	return attr
 }
 

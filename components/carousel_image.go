@@ -75,10 +75,15 @@ func (m *MjCarouselImage) GetStyles(element string) []*core.Style {
 			{Name: "mso-hide", Value: "all"},
 		}
 	case "thumbnails.a":
+		display := "inline-block"
+		if m.hasThumbnailsSupported() {
+			display = "none"
+		}
+
 		return []*core.Style{
 			{Name: "border", Value: m.GetAttributeOr("tb-border", "")},
 			{Name: "border-radius", Value: m.GetAttributeOr("tb-border-radius", "")},
-			{Name: "display", Value: "inline-block"},
+			{Name: "display", Value: display},
 			{Name: "overflow", Value: "hidden"},
 			{Name: "width", Value: helpers.TrimNumber(m.GetAttributeOr("tb-width", "")) + "px"},
 		}
@@ -95,6 +100,11 @@ func (m *MjCarouselImage) GetStyles(element string) []*core.Style {
 
 func (m *MjCarouselImage) GetChildContext() *core.MJMLContext {
 	return m.Context
+}
+
+func (m *MjCarouselImage) hasThumbnailsSupported() bool {
+	thumbnails := m.GetAttributeOr("thumbnails", "")
+	return thumbnails == "supported"
 }
 
 func (m *MjCarouselImage) renderThumbnail(w core.MJMLWriter) error {

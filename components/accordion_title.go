@@ -53,13 +53,13 @@ func (t *MjAccordionTitle) GetStyles(element string) []*core.Style {
 			{Name: "background-color", Value: t.GetAttributeOr("background-color", "")},
 			{Name: "color", Value: t.GetAttributeOr("color", "")},
 			{Name: "font-size", Value: t.GetAttributeOr("font-size", "")},
-			{Name: "font-family", Value: t.GetAttributeOr("font-family", "")},
+			{Name: "font-family", Value: t.resolveFontFamily()},
 			{Name: "font-weight", Value: t.GetAttributeOr("font-weight", "")},
+			{Name: "padding", Value: t.GetAttributeOr("padding", "")},
 			{Name: "padding-bottom", Value: t.GetAttributeOr("padding-bottom", "")},
 			{Name: "padding-left", Value: t.GetAttributeOr("padding-left", "")},
 			{Name: "padding-right", Value: t.GetAttributeOr("padding-right", "")},
 			{Name: "padding-top", Value: t.GetAttributeOr("padding-top", "")},
-			{Name: "padding", Value: t.GetAttributeOr("padding", "")},
 		}
 	case "table":
 		return []*core.Style{
@@ -157,6 +157,32 @@ func (t *MjAccordionTitle) renderIcons(w core.MJMLWriter) error {
 	}
 
 	return nil
+}
+
+func (t *MjAccordionTitle) resolveFontFamily() string {
+	if t.Node != nil && t.Node.Attributes != nil {
+		fontFamily, ok := t.Node.Attributes.Get("font-family")
+		if ok {
+			return fontFamily
+		}
+	}
+
+	elementFontFamily := t.GetAttribute("elementFontFamily")
+	if elementFontFamily != nil {
+		return *elementFontFamily
+	}
+
+	accordionFontFamily := t.GetAttribute("accordionFontFamily")
+	if accordionFontFamily != nil {
+		return *accordionFontFamily
+	}
+
+	fontFamily := t.GetAttribute("font-family")
+	if fontFamily != nil {
+		return *fontFamily
+	}
+
+	return ""
 }
 
 func (t *MjAccordionTitle) Render(w core.MJMLWriter) error {
