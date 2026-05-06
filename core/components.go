@@ -71,6 +71,7 @@ type MJMLOptions struct {
 	KeepComments      bool
 	IgnoreIncludes    bool
 	ValidationLevel   ValidationLevel
+	Data              map[string]any
 }
 
 type HtmlAttribute struct {
@@ -101,6 +102,7 @@ type GlobalData struct {
 	ForceOWADesktop      bool
 	Lang                 string
 	Dir                  string
+	Data                 map[string]any
 }
 
 type MJMLContext struct {

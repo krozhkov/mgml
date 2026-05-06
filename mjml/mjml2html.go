@@ -23,6 +23,10 @@ import (
 )
 
 func MJML2Html(mjml string, options *core.MJMLOptions) (string, error) {
+	if options == nil {
+		options = &core.MJMLOptions{}
+	}
+
 	fonts := []*helpers.FontDeclaration{
 		{Name: "Open Sans", Href: "https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,700"},
 		{Name: "Droid Sans", Href: "https://fonts.googleapis.com/css?family=Droid+Sans:300,400,500,700"},
@@ -33,6 +37,10 @@ func MJML2Html(mjml string, options *core.MJMLOptions) (string, error) {
 	keepComments := options.KeepComments
 	ignoreIncludes := options.IgnoreIncludes
 	validationLevel := options.ValidationLevel
+	data := options.Data
+	if data == nil {
+		data = make(map[string]any)
+	}
 
 	defaultStyles := options.InlineStyles
 	defaultAttributes := make(map[string]*orderedmap.OrderedMap[string, string])
@@ -133,6 +141,7 @@ func MJML2Html(mjml string, options *core.MJMLOptions) (string, error) {
 			ForceOWADesktop:   owa == "desktop",
 			Lang:              lang,
 			Dir:               dir,
+			Data:              data,
 		},
 		Processing: func(w core.MJMLWriter, xml string, ctx *core.MJMLContext) error {
 			// supports returning siblings elements from a custom component
