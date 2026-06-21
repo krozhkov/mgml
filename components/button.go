@@ -159,11 +159,14 @@ func (b *MjButton) calculateAWidth(width string) string {
 }
 
 func (b *MjButton) Render(w core.MJMLWriter) error {
+	href := b.GetAttribute("href")
+
 	var tag string
-	if b.GetAttribute("href") != nil {
+	if href != nil && *href != "" {
 		tag = "a"
 	} else {
 		tag = "p"
+		href = nil
 	}
 
 	if _, err := w.WriteString("<table "); err != nil {
@@ -213,7 +216,7 @@ func (b *MjButton) Render(w core.MJMLWriter) error {
 	}
 
 	if err := NewAttributesBuilder(b).
-		AddNullable("href", b.GetAttribute("href")).
+		AddNullable("href", href).
 		AddNullable("name", b.GetAttribute("name")).
 		AddNullable("rel", b.GetAttribute("rel")).
 		AddNullable("title", b.GetAttribute("title")).
