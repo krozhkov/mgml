@@ -53,7 +53,7 @@ func (h *MjHtmlAttributes) Render(w core.MJMLWriter) error {
 
 		attributes := utils.MapFunc(
 			utils.FilterFunc(child.Children, func(n *parser.MJMLNode) bool {
-				return n.TagName == "mj-html-attribute" && n.Attributes.GetOrDefault("name", "") != ""
+				return n.TagName == "mj-html-attribute" && n.Attributes != nil && n.Attributes.GetOrDefault("name", "") != ""
 			}),
 			func(n *parser.MJMLNode) core.HtmlAttribute {
 				return core.HtmlAttribute{Name: n.Attributes.GetOrDefault("name", ""), Value: n.Content}

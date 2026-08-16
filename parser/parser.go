@@ -346,7 +346,9 @@ func (p *mjmlParser) handleInclude(file string, line int) error {
 
 	if body != nil {
 		bindToTree(body.Children, p.cur)
-		p.cur.Children = slices.Concat(p.cur.Children, body.Children)
+		if p.cur != nil {
+			p.cur.Children = slices.Concat(p.cur.Children, body.Children)
+		}
 	}
 
 	if head != nil {
@@ -519,7 +521,7 @@ func (p *mjmlParser) OnCloseTag(name string, isImplied bool) {
 
 				val := partialVal[0:bytes.LastIndex(partialVal, []byte("</"+name))]
 
-				if len(val) > 0 {
+				if len(val) > 0 && p.cur != nil {
 					p.cur.Content = string(bytes.TrimSpace(val))
 				}
 			}
