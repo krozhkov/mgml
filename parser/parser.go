@@ -212,14 +212,14 @@ func MJMLParser(xml []byte, options MJMLParserOptions, includedIn []*MJMLInclude
 func (p *mjmlParser) handleCssHtmlInclude(file string, attrs *Attributes, line int) error {
 	partialPath, err := resolvePath(p.cwd, file)
 	if err != nil {
-		return err
+		return fmt.Errorf("handleCssHtmlInclude resolvePath: %w", err)
 	}
 
 	content, err := os.ReadFile(partialPath)
 	if err != nil {
 		absolutePath, err := resolvePath(p.cwd, p.actualPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("handleCssHtmlInclude resolvePath actual: %w", err)
 		}
 
 		newNode := &MJMLNode{
@@ -240,7 +240,7 @@ func (p *mjmlParser) handleCssHtmlInclude(file string, attrs *Attributes, line i
 	if attrs.GetOrDefault("type", "") == "html" {
 		absolutePath, err := resolvePath(p.cwd, p.actualPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("handleCssHtmlInclude resolvePath actual: %w", err)
 		}
 
 		newNode := &MJMLNode{
@@ -264,7 +264,7 @@ func (p *mjmlParser) handleCssHtmlInclude(file string, attrs *Attributes, line i
 
 	absolutePath, err := resolvePath(p.cwd, p.actualPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("handleCssHtmlInclude resolvePath actual: %w", err)
 	}
 
 	newNode := &MJMLNode{
@@ -285,7 +285,7 @@ func (p *mjmlParser) handleCssHtmlInclude(file string, attrs *Attributes, line i
 func (p *mjmlParser) handleInclude(file string, line int) error {
 	partialPath, err := resolvePath(p.cwd, file)
 	if err != nil {
-		return err
+		return fmt.Errorf("handleInclude resolvePath: %w", err)
 	}
 
 	if utils.LastIndexFunc(p.cur.IncludedIn, func(e *MJMLIncludedIn) bool { return e.File == partialPath }) != -1 {
@@ -297,7 +297,7 @@ func (p *mjmlParser) handleInclude(file string, line int) error {
 	if err != nil {
 		absolutePath, err := resolvePath(p.cwd, p.actualPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("handleInclude resolvePath actual: %w", err)
 		}
 
 		newNode := &MJMLNode{
@@ -357,7 +357,7 @@ func (p *mjmlParser) handleInclude(file string, line int) error {
 		if curHead == nil {
 			absolutePath, err := resolvePath(p.cwd, p.actualPath)
 			if err != nil {
-				return err
+				return fmt.Errorf("handleInclude resolvePath actual: %w", err)
 			}
 
 			curHead = &MJMLNode{
@@ -519,10 +519,12 @@ func (p *mjmlParser) OnCloseTag(name string, isImplied bool) {
 			if !p.isSelfClosing() {
 				partialVal := bytes.TrimSpace(p.xml[p.currentEndingTagEndIndex+1 : p.parser.EndIndex])
 
-				val := partialVal[0:bytes.LastIndex(partialVal, []byte("</"+name))]
-
-				if len(val) > 0 && p.cur != nil {
-					p.cur.Content = string(bytes.TrimSpace(val))
+				idx := bytes.LastIndex(partialVal, []byte("</"+name))
+				if idx != -1 {
+					val := partialVal[0:idx]
+					if len(val) > 0 && p.cur != nil {
+						p.cur.Content = string(bytes.TrimSpace(val))
+					}
 				}
 			}
 		}
