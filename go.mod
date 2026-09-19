@@ -1,13 +1,13 @@
 module github.com/krozhkov/mgml
 
-go 1.25.3
+go 1.26.0
 
 require (
 	github.com/elliotchance/orderedmap/v3 v3.1.0
 	github.com/gkampitakis/go-snaps v0.5.21
 	github.com/gorilla/css v1.0.1
-	github.com/krozhkov/go-css-select v0.1.0
-	github.com/krozhkov/go-htmlparser2 v0.1.0
+	github.com/krozhkov/go-css-select v0.3.0
+	github.com/krozhkov/go-htmlparser2 v0.2.0
 	github.com/stretchr/testify v1.11.1
 )
 

@@ -140,6 +140,7 @@ type mjmlParser struct {
 	parser *parser.Parser
 }
 
+// TODO: rewrite MJMLParser using io.Reader
 func MJMLParser(xml []byte, options MJMLParserOptions, includedIn []*MJMLIncludedIn) (*MJMLNode, error) {
 	p := &mjmlParser{
 		xml:                xml,
@@ -186,6 +187,7 @@ func MJMLParser(xml []byte, options MJMLParserOptions, includedIn []*MJMLInclude
 	}
 
 	p.parser = parser.NewParser(
+		nil,
 		p,
 		&parser.ParserOptions{
 			XmlMode:                 false,
@@ -385,7 +387,11 @@ func (p *mjmlParser) Parse() (*MJMLNode, error) {
 	}
 	p.xml = xml
 
-	p.parser.End(xml)
+	p.parser.Reset(bytes.NewReader(xml))
+	err := p.parser.Parse()
+	if err != nil {
+		return nil, err
+	}
 
 	if p.mjml == nil {
 		return nil, errors.New("parsing failed. check your mjml")

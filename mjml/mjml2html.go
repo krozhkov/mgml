@@ -203,7 +203,10 @@ func MJML2Html(mjml string, options *core.MJMLOptions) (string, error) {
 	var dom []*dom.Node
 
 	if len(context.GlobalData.HtmlAttributes) > 0 {
-		dom = parseHtml(content, dom)
+		dom, err = parseHtml(content, dom)
+		if err != nil {
+			return "", nil
+		}
 
 		for _, rule := range context.GlobalData.HtmlAttributes {
 			matches, err := query.SelectAll(rule.Path, dom, nil)
@@ -220,7 +223,11 @@ func MJML2Html(mjml string, options *core.MJMLOptions) (string, error) {
 	}
 
 	if len(context.GlobalData.InlineStyles) > 0 {
-		dom = parseHtml(content, dom)
+		dom, err = parseHtml(content, dom)
+		if err != nil {
+			return "", nil
+		}
+
 		parser := cssparser.NewCssParser()
 		for _, css := range context.GlobalData.InlineStyles {
 			styles, err := parser.Parse(css)
@@ -266,9 +273,9 @@ func processing(w core.MJMLWriter, node *parser.MJMLNode, props *core.ComponentP
 	return nil
 }
 
-func parseHtml(content string, nodes []*dom.Node) []*dom.Node {
+func parseHtml(content string, nodes []*dom.Node) ([]*dom.Node, error) {
 	if nodes != nil {
-		return nodes
+		return nodes, nil
 	}
 
 	return dom.ParseDOM(content, &htmlparser2.ParserOptions{

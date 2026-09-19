@@ -13,13 +13,16 @@ import (
 	"github.com/krozhkov/mgml/internal/utils"
 	"github.com/krozhkov/mgml/mjml"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func parseDOM(str string) []*dom.Node {
-	return dom.ParseDOM(str, &parser.ParserOptions{LowerCaseAttributeNames: true, DecodeEntities: true, RecognizeSelfClosing: true})
-}
-
 func TestRendering(t *testing.T) {
+	parseDOM := func(t *testing.T, str string) []*dom.Node {
+		doc, err := dom.ParseDOM(str, &parser.ParserOptions{LowerCaseAttributeNames: true, DecodeEntities: true, RecognizeSelfClosing: true})
+		require.NoError(t, err)
+		return doc
+	}
+
 	t.Run("should set context", func(t *testing.T) {
 		input := `<mjml>
 			<mj-head>
@@ -145,7 +148,7 @@ func TestRendering(t *testing.T) {
 		assert.Nil(t, err)
 		snaps.MatchSnapshot(t, html)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".text div", nodes, nil)
 		assert.Nil(t, err)
@@ -222,7 +225,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".accordion-title", nodes, nil)
 		assert.Nil(t, err)
@@ -274,7 +277,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".my-accordion-1 .mj-accordion-title td:first-child, .my-accordion-1 .mj-accordion-content td:first-child, .my-accordion-2 .mj-accordion-title td:first-child, .my-accordion-2 .mj-accordion-content td:first-child", nodes, nil)
 		assert.Nil(t, err)
@@ -314,7 +317,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		paddings := []string{
 			"padding-left",
@@ -360,7 +363,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".mj-carousel-thumbnail", nodes, nil)
 		assert.Nil(t, err)
@@ -393,7 +396,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".mj-column-per-100 > table > tbody > tr > td, .mj-column-per-100 > table > tbody > tr > td > table", nodes, nil)
 		assert.Nil(t, err)
@@ -478,7 +481,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		paddings := []string{
 			"padding-bottom",
@@ -532,7 +535,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".my-social-element > td:first-child", nodes, nil)
 		assert.Nil(t, err)
@@ -569,7 +572,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".my-social-element > td > table > tbody > tr > td", nodes, nil)
 		assert.Nil(t, err)
@@ -619,7 +622,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".my-table > table", nodes, nil)
 		assert.Nil(t, err)
@@ -711,7 +714,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".table table", nodes, nil)
 		assert.Nil(t, err)
@@ -752,7 +755,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll("body > div > div > table:first-child > tbody > tr > td, body > div > div", nodes, nil)
 		assert.Nil(t, err)
@@ -815,7 +818,7 @@ func TestRendering(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		nodes := parseDOM(html)
+		nodes := parseDOM(t, html)
 
 		matches, err := query.SelectAll(".my-section", nodes, nil)
 		assert.Nil(t, err)
