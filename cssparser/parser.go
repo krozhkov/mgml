@@ -2,20 +2,12 @@ package cssparser
 
 import (
 	"errors"
-	"fmt"
+	"io"
+	"iter"
 	"strings"
 
-	"github.com/gorilla/css/scanner"
-)
-
-type CssParserState uint32
-
-const (
-	CssParserStateRoot CssParserState = iota
-	CssParserStateSelector
-	CssParserStateBlock
-	CssParserStatePropName
-	CssParserStatePropValue
+	"github.com/tdewolff/parse/v2"
+	"github.com/tdewolff/parse/v2/css"
 )
 
 type Declaration struct {
@@ -28,224 +20,180 @@ type Rule struct {
 	Declarations []*Declaration
 }
 
-type CssParser struct {
-	state              CssParserState
-	scanner            *scanner.Scanner
-	currentValue       *strings.Builder
-	currentRule        *Rule
-	currentDeclaration *Declaration
-	parenthesesDepth   int
+func ParseCss(input string) ([]*Rule, error) {
+	result := make([]*Rule, 0)
+	parser := css.NewParser(parse.NewInputString(input), false)
 
-	Error  error
-	Result []*Rule
-}
-
-func NewCssParser() *CssParser {
-	return &CssParser{
-		state:            CssParserStateRoot,
-		parenthesesDepth: 0,
-		Result:           make([]*Rule, 0),
-	}
-}
-
-func (p *CssParser) Parse(input string) ([]*Rule, error) {
-	p.Result = make([]*Rule, 0)
-	p.scanner = scanner.New(input)
+	var selectorStack []string
+	var ruleStack []*Rule
 
 	for {
-		token := p.scanner.Next()
-
-		if p.Error != nil {
-			return nil, p.Error
-		}
-
-		if token.Type == scanner.TokenEOF {
-			if p.state == CssParserStateRoot {
-				return p.Result, nil
-			} else {
+		gt, _, data := parser.Next()
+		if gt == css.ErrorGrammar {
+			if err := parser.Err(); err != nil && err != io.EOF {
+				return nil, err
+			}
+			if len(ruleStack) > 0 {
 				return nil, errors.New("parser is in an invalid state")
 			}
+			break
 		}
 
-		if token.Type == scanner.TokenAtKeyword {
+		switch gt {
+		case css.AtRuleGrammar, css.BeginAtRuleGrammar:
 			return nil, errors.New("parser does not support At-rules")
-		}
 
-		if token.Type == scanner.TokenError {
-			return nil, errors.New(token.String())
-		}
-
-		switch p.state {
-		case CssParserStateRoot:
-			p.stateRoot(token)
-		case CssParserStateSelector:
-			p.stateSelector(token)
-		case CssParserStateBlock:
-			p.stateBlock(token)
-		case CssParserStatePropName:
-			p.statePropName(token)
-		case CssParserStatePropValue:
-			p.statePropValue(token)
-		}
-	}
-}
-
-func (p *CssParser) stateRoot(token *scanner.Token) {
-	switch token.Type {
-	case scanner.TokenIdent, scanner.TokenHash:
-		p.toState(CssParserStateSelector, token.Value)
-	case scanner.TokenChar:
-		switch token.Value {
-		case ".", "#", "*", "[", ":", "::":
-			p.toState(CssParserStateSelector, token.Value)
-		default:
-			p.unexpectedToken(token)
-		}
-	case scanner.TokenS, scanner.TokenComment, scanner.TokenBOM, scanner.TokenCDO, scanner.TokenCDC:
-		// just skip spaces and comments
-	case scanner.TokenAtKeyword:
-		// skip all the AtRule (unsupported)
-	default:
-		p.unexpectedToken(token)
-	}
-}
-
-func (p *CssParser) stateSelector(token *scanner.Token) {
-	switch token.Type {
-	case scanner.TokenIdent,
-		scanner.TokenS,
-		scanner.TokenHash,
-		scanner.TokenString,
-		scanner.TokenNumber,
-		scanner.TokenFunction,
-		scanner.TokenIncludes,
-		scanner.TokenDashMatch,
-		scanner.TokenPrefixMatch,
-		scanner.TokenSuffixMatch,
-		scanner.TokenSubstringMatch:
-		p.currentValue.WriteString(token.Value)
-	case scanner.TokenChar:
-		switch token.Value {
-		case ">", "+", "~", "*", ",", ".", "[", "]", ")", ":", "|", "=":
-			p.currentValue.WriteString(token.Value)
-		case "{":
-			p.state = CssParserStateBlock
-			selector := strings.TrimSpace(p.currentValue.String())
-			p.currentValue = nil
-			p.currentRule = &Rule{Selector: selector, Declarations: make([]*Declaration, 0)}
-			p.Result = append(p.Result, p.currentRule)
-		default:
-			p.unexpectedToken(token)
-		}
-	case scanner.TokenComment:
-		// just skip comments
-	case scanner.TokenAtKeyword:
-		// skip all the AtRule (unsupported)
-	default:
-		p.unexpectedToken(token)
-	}
-}
-
-func (p *CssParser) stateBlock(token *scanner.Token) {
-	switch token.Type {
-	case scanner.TokenIdent:
-		p.toState(CssParserStatePropName, token.Value)
-	case scanner.TokenChar:
-		switch token.Value {
-		case "}":
-			p.state = CssParserStateRoot
-			p.currentDeclaration = nil
-			p.currentRule = nil
-			p.parenthesesDepth = 0
-		case "-":
-			next := p.scanner.Next()
-			// check if it's a css variable
-			if next.Type == scanner.TokenIdent {
-				p.toState(CssParserStatePropName, token.Value+next.Value)
-			} else {
-				p.unexpectedToken(token)
+		case css.BeginRulesetGrammar:
+			var sb strings.Builder
+			for _, val := range parser.Values() {
+				sb.Write(val.Data)
 			}
-		default:
-			p.unexpectedToken(token)
+			rawSelector := strings.TrimSpace(sb.String())
+
+			var resolvedSelector string
+			if len(selectorStack) == 0 {
+				resolvedSelector = rawSelector
+			} else {
+				parentSelector := selectorStack[len(selectorStack)-1]
+				resolvedSelector = resolveNesting(parentSelector, rawSelector)
+			}
+
+			selectorStack = append(selectorStack, resolvedSelector)
+			rule := &Rule{
+				Selector:     resolvedSelector,
+				Declarations: make([]*Declaration, 0),
+			}
+			ruleStack = append(ruleStack, rule)
+			result = append(result, rule)
+
+		case css.EndRulesetGrammar:
+			if len(selectorStack) > 0 {
+				selectorStack = selectorStack[:len(selectorStack)-1]
+			}
+			if len(ruleStack) > 0 {
+				ruleStack = ruleStack[:len(ruleStack)-1]
+			}
+
+		case css.DeclarationGrammar, css.CustomPropertyGrammar:
+			if len(ruleStack) == 0 {
+				continue
+			}
+			property := strings.TrimSpace(string(data))
+			var sb strings.Builder
+			for _, val := range parser.Values() {
+				sb.Write(val.Data)
+			}
+			value := strings.TrimSpace(sb.String())
+
+			currentRule := ruleStack[len(ruleStack)-1]
+			currentRule.Declarations = append(currentRule.Declarations, &Declaration{
+				Property: property,
+				Value:    value,
+			})
 		}
-	case scanner.TokenS, scanner.TokenComment:
-		// just skip spaces and comments
-	default:
-		p.unexpectedToken(token)
 	}
+
+	return result, nil
 }
 
-func (p *CssParser) statePropName(token *scanner.Token) {
-	switch token.Type {
-	case scanner.TokenChar:
-		if token.Value == ":" {
-			p.state = CssParserStatePropValue
-			property := p.currentValue.String()
-			p.currentValue = new(strings.Builder)
-			p.currentDeclaration = &Declaration{Property: property}
-			p.currentRule.Declarations = append(p.currentRule.Declarations, p.currentDeclaration)
-		} else {
-			p.unexpectedToken(token)
+func resolveNesting(parent, child string) string {
+	parents := splitSelectors(parent)
+	children := splitSelectors(child)
+
+	var resolved []string
+	for _, c := range children {
+		hasAmp := hasAmp(c)
+		for _, p := range parents {
+			if hasAmp {
+				resolved = append(resolved, replaceAmp(c, p))
+			} else {
+				resolved = append(resolved, p+" "+c)
+			}
 		}
-	case scanner.TokenS, scanner.TokenComment:
-		// just skip spaces and comments
-	default:
-		p.unexpectedToken(token)
 	}
+
+	return strings.Join(resolved, ", ")
 }
 
-func (p *CssParser) statePropValue(t *scanner.Token) {
-	switch t.Type {
-	case scanner.TokenIdent,
-		scanner.TokenS,
-		scanner.TokenString,
-		scanner.TokenNumber,
-		scanner.TokenPercentage,
-		scanner.TokenDimension,
-		scanner.TokenHash,
-		scanner.TokenURI:
-		p.currentValue.WriteString(t.Value)
-	case scanner.TokenChar:
-		if p.parenthesesDepth == 0 && t.Value == "}" {
-			p.state = CssParserStateRoot
-			p.currentRule = nil
-			value := strings.TrimSpace(p.currentValue.String())
-			p.currentValue = nil
-			p.currentDeclaration.Value = value
-			p.currentDeclaration = nil
-		} else if p.parenthesesDepth == 0 && t.Value == ";" {
-			p.state = CssParserStateBlock
-			value := strings.TrimSpace(p.currentValue.String())
-			p.currentValue = nil
-			p.currentDeclaration.Value = value
-			p.currentDeclaration = nil
-		} else if t.Value == "(" {
-			p.parenthesesDepth += 1
-			p.currentValue.WriteString(t.Value)
-		} else if t.Value == ")" {
-			p.parenthesesDepth -= 1
-			p.currentValue.WriteString(t.Value)
-		} else if t.Value == "," || t.Value == "/" || t.Value == "!" || t.Value == "+" || t.Value == "-" || t.Value == "*" {
-			p.currentValue.WriteString(t.Value)
-		} else {
-			p.unexpectedToken(t)
+func splitSelectors(s string) []string {
+	var result []string
+	var depth int
+	var inQuote rune
+	start := 0
+	for i, r := range s {
+		if inQuote != 0 {
+			if r == inQuote && (i == 0 || s[i-1] != '\\') {
+				inQuote = 0
+			}
+			continue
 		}
-	case scanner.TokenFunction:
-		p.parenthesesDepth += 1
-		p.currentValue.WriteString(t.Value)
-	case scanner.TokenComment:
-		// just skip comments
-	default:
-		p.unexpectedToken(t)
+		if r == '"' || r == '\'' {
+			inQuote = r
+			continue
+		}
+		if r == '(' || r == '[' {
+			depth++
+		} else if r == ')' || r == ']' {
+			if depth > 0 {
+				depth--
+			}
+		} else if r == ',' && depth == 0 {
+			part := strings.TrimSpace(s[start:i])
+			if part != "" {
+				result = append(result, part)
+			}
+			start = i + 1
+		}
 	}
+	if start < len(s) {
+		part := strings.TrimSpace(s[start:])
+		if part != "" {
+			result = append(result, part)
+		}
+	}
+	return result
 }
 
-func (p *CssParser) toState(state CssParserState, value string) {
-	p.state = state
-	p.currentValue = new(strings.Builder)
-	p.currentValue.WriteString(value)
+func hasAmp(selector string) bool {
+	var has bool
+	for range ampIterator(selector) {
+		has = true
+		break
+	}
+	return has
 }
 
-func (p *CssParser) unexpectedToken(token *scanner.Token) {
-	p.Error = fmt.Errorf("unexpected token %s", token.String())
+func replaceAmp(selector, parent string) string {
+	var sb strings.Builder
+	var lastPos int
+	for pos := range ampIterator(selector) {
+		sb.WriteString(selector[lastPos:pos])
+		sb.WriteString(parent)
+		lastPos = pos + 1
+	}
+	sb.WriteString(selector[lastPos:])
+	return sb.String()
+}
+
+func ampIterator(s string) iter.Seq[int] {
+	return func(yield func(int) bool) {
+		var inQuote rune
+		for i, r := range s {
+			if inQuote != 0 {
+				if r == inQuote && (i == 0 || s[i-1] != '\\') {
+					inQuote = 0
+				}
+				continue
+			}
+			if r == '"' || r == '\'' {
+				inQuote = r
+				continue
+			}
+			if r == '&' && (i == 0 || s[i-1] != '\\') {
+				if !yield(i) {
+					return
+				}
+			}
+		}
+	}
 }

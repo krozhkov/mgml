@@ -228,9 +228,8 @@ func MJML2Html(mjml string, options *core.MJMLOptions) (string, error) {
 			return "", nil
 		}
 
-		parser := cssparser.NewCssParser()
 		for _, css := range context.GlobalData.InlineStyles {
-			styles, err := parser.Parse(css)
+			styles, err := cssparser.ParseCss(css)
 			if err != nil {
 				return "", err
 			}

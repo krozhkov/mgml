@@ -7,11 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func parse(input string) ([]*Rule, error) {
-	parser := NewCssParser()
-	return parser.Parse(input)
-}
-
 func TestSelectors(t *testing.T) {
 	selectors := []string{
 		"myNameSpace|a {}",
@@ -65,7 +60,7 @@ func TestSelectors(t *testing.T) {
 
 	for _, selector := range selectors {
 		t.Run(fmt.Sprintf("selector should be valid: %s", selector), func(t *testing.T) {
-			rules, err := parse(selector)
+			rules, err := ParseCss(selector)
 			assert.Nil(t, err)
 			assert.Equal(t, 1, len(rules))
 		})
@@ -74,7 +69,7 @@ func TestSelectors(t *testing.T) {
 
 func TestCssParser(t *testing.T) {
 	t.Run("Should parse attribute selectors", func(t *testing.T) {
-		rules, err := parse(`input[type=range] {
+		rules, err := ParseCss(`input[type=range] {
 			background: lightblue url("img_tree.gif") no-repeat fixed center;
 			accent-color: rgb(0, 0, 255);
 		}`)
@@ -84,7 +79,7 @@ func TestCssParser(t *testing.T) {
 	})
 
 	t.Run("Allow hash tokens inside property value", func(t *testing.T) {
-		rules, err := parse(`.icon {
+		rules, err := ParseCss(`.icon {
 			background: #ffffff;
 		}`)
 
@@ -93,7 +88,7 @@ func TestCssParser(t *testing.T) {
 	})
 
 	t.Run("Allow hash tokens inside property value", func(t *testing.T) {
-		rules, err := parse(`.icon {
+		rules, err := ParseCss(`.icon {
 			background: #ffffff;
 		}`)
 
@@ -102,7 +97,7 @@ func TestCssParser(t *testing.T) {
 	})
 
 	t.Run("Should parse !important inside property value", func(t *testing.T) {
-		rules, err := parse(`/* This is a comment */
+		rules, err := ParseCss(`/* This is a comment */
 			p > a, a.hyperlink {
 				color: blue;
 				text-decoration: underline !important;
@@ -115,7 +110,7 @@ func TestCssParser(t *testing.T) {
 	})
 
 	t.Run("Allow css variables", func(t *testing.T) {
-		rules, err := parse(`
+		rules, err := ParseCss(`
 		:root {
 			--primary-bg-color: #1e90ff;
 			--primary-color: #ffffff;
@@ -128,7 +123,7 @@ func TestCssParser(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, 2, len(rules))
 
-		rules, err = parse(`
+		rules, err = ParseCss(`
 		.foo {
 			--width-a: 100px;
 			--width-b: calc(var(--width-a) / 2);
@@ -141,19 +136,135 @@ func TestCssParser(t *testing.T) {
 	})
 
 	t.Run("Allow use complex calc funcions", func(t *testing.T) {
-		rules, err := parse(`h1 {
+		rules, err := ParseCss(`h1 {
 			font-size: calc(1.5rem + 3vw);
 		}`)
 
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(rules))
 
-		rules, err = parse(`
+		rules, err = ParseCss(`
 		.foo {
 			color: lch(from aquamarine l c calc(h + 180))
 		}`)
 
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(rules))
+	})
+}
+
+func TestCssNesting(t *testing.T) {
+	t.Run("Nested pseudo-class with ampersand", func(t *testing.T) {
+		rules, err := ParseCss(`.card {
+			color: red;
+			&:hover {
+				color: green;
+			}
+		}`)
+
+		assert.Nil(t, err)
+		assert.Equal(t, 2, len(rules))
+		assert.Equal(t, ".card", rules[0].Selector)
+		assert.Equal(t, "color", rules[0].Declarations[0].Property)
+		assert.Equal(t, "red", rules[0].Declarations[0].Value)
+
+		assert.Equal(t, ".card:hover", rules[1].Selector)
+		assert.Equal(t, "color", rules[1].Declarations[0].Property)
+		assert.Equal(t, "green", rules[1].Declarations[0].Value)
+	})
+
+	t.Run("Nested compound class with ampersand", func(t *testing.T) {
+		rules, err := ParseCss(`.btn {
+			padding: 10px;
+			&.primary {
+				background: blue;
+			}
+		}`)
+
+		assert.Nil(t, err)
+		assert.Equal(t, 2, len(rules))
+		assert.Equal(t, ".btn", rules[0].Selector)
+		assert.Equal(t, ".btn.primary", rules[1].Selector)
+		assert.Equal(t, "background", rules[1].Declarations[0].Property)
+		assert.Equal(t, "blue", rules[1].Declarations[0].Value)
+	})
+
+	t.Run("Nested element selector without ampersand", func(t *testing.T) {
+		rules, err := ParseCss(`.card {
+			padding: 20px;
+			p {
+				margin: 0;
+			}
+		}`)
+
+		assert.Nil(t, err)
+		assert.Equal(t, 2, len(rules))
+		assert.Equal(t, ".card", rules[0].Selector)
+		assert.Equal(t, ".card p", rules[1].Selector)
+		assert.Equal(t, "margin", rules[1].Declarations[0].Property)
+		assert.Equal(t, "0", rules[1].Declarations[0].Value)
+	})
+
+	t.Run("Comma-separated parents and children", func(t *testing.T) {
+		rules, err := ParseCss(`.a, .b {
+			& .c, & .d {
+				margin: 0;
+			}
+		}`)
+
+		assert.Nil(t, err)
+		assert.Equal(t, 2, len(rules))
+		assert.Equal(t, ".a,.b", rules[0].Selector)
+		assert.Equal(t, ".a .c, .b .c, .a .d, .b .d", rules[1].Selector)
+	})
+
+	t.Run("Deep nesting (3 levels)", func(t *testing.T) {
+		rules, err := ParseCss(`.nav {
+			ul {
+				li {
+					color: black;
+				}
+			}
+		}`)
+
+		assert.Nil(t, err)
+		assert.Equal(t, 3, len(rules))
+		assert.Equal(t, ".nav", rules[0].Selector)
+		assert.Equal(t, ".nav ul", rules[1].Selector)
+		assert.Equal(t, ".nav ul li", rules[2].Selector)
+		assert.Equal(t, "color", rules[2].Declarations[0].Property)
+		assert.Equal(t, "black", rules[2].Declarations[0].Value)
+	})
+
+	t.Run("Declarations before and after nested rule", func(t *testing.T) {
+		rules, err := ParseCss(`.card {
+			color: red;
+			&:hover {
+				color: green;
+			}
+			background: white;
+		}`)
+
+		assert.Nil(t, err)
+		assert.Equal(t, 2, len(rules))
+		assert.Equal(t, ".card", rules[0].Selector)
+		assert.Equal(t, 2, len(rules[0].Declarations))
+		assert.Equal(t, "color", rules[0].Declarations[0].Property)
+		assert.Equal(t, "red", rules[0].Declarations[0].Value)
+		assert.Equal(t, "background", rules[0].Declarations[1].Property)
+		assert.Equal(t, "white", rules[0].Declarations[1].Value)
+
+		assert.Equal(t, ".card:hover", rules[1].Selector)
+		assert.Equal(t, 1, len(rules[1].Declarations))
+		assert.Equal(t, "color", rules[1].Declarations[0].Property)
+		assert.Equal(t, "green", rules[1].Declarations[0].Value)
+	})
+}
+
+func TestAtRules(t *testing.T) {
+	t.Run("Should return error for At-rules", func(t *testing.T) {
+		_, err := ParseCss(`@media (max-width: 600px) { body { color: red; } }`)
+		assert.NotNil(t, err)
+		assert.Equal(t, "parser does not support At-rules", err.Error())
 	})
 }
